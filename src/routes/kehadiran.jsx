@@ -15,6 +15,7 @@ function Kehadiran() {
   const [showModal, setShowModal] = useState(false);
   const [suksesSimpan, setSuksesSimpan] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
+  const [totalKasMasuk, setTotalKasMasuk] = useState(0);
   const [dataGetOne, setDataGetOne] = useState({});
   const { register, handleSubmit, reset, getValues, setValue } = useForm();
 
@@ -49,8 +50,14 @@ function Kehadiran() {
       .select(`*, member:tbl_member(id, nama)`)
       .eq("tanggal_main", getToday);
     setListKehadiran(data);
-  }
 
+    let totalMasuk = 0;
+    for (let index = 0; index < data.length; index++) {
+      totalMasuk = totalMasuk + data[index].total_bayar;
+    }
+    setTotalKasMasuk(totalMasuk);
+  }
+  console.log("totalMasuk", totalKasMasuk);
   async function getMembers() {
     const { data } = await supabase.from("tbl_member").select();
     setMembers(data);
@@ -67,11 +74,12 @@ function Kehadiran() {
         .update({
           jumlah_kok: dataForm.jumlah_kok,
           patungan_lapangan: dataForm.patungan_lapangan,
+          total_bayar: dataForm.total_bayar,
         })
         .eq("kehadiran_uuid", dataGetOne.kehadiran_uuid)
         .select();
       if (error === null) {
-        toast("Data Member Terupdate");
+        toast("Data Kehadiran Terupdate");
         setShowModal(false);
         reset({
           member_id: "",
@@ -90,12 +98,13 @@ function Kehadiran() {
           member_id: dataForm.member_id,
           jumlah_kok: dataForm.jumlah_kok,
           patungan_lapangan: dataForm.patungan_lapangan,
+          total_bayar: dataForm.total_bayar,
           tanggal_main: getToday,
         },
       ]);
 
       if (error === null) {
-        toast("Data Member Tersimpan");
+        toast("Data Kehadiran Tersimpan");
         setShowModal(false);
         reset({
           member_id: "",
@@ -144,7 +153,7 @@ function Kehadiran() {
       .eq("kehadiran_uuid", dataGetOne.kehadiran_uuid);
 
     if (error === null) {
-      toast("Data Member Berhasil Dihapus");
+      toast("Data Kehadiran Berhasil Dihapus");
       setShowModal(false);
       reset({
         member_id: "",
@@ -244,6 +253,16 @@ function Kehadiran() {
                   </tr>
                 );
               })}
+            <tr className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
+              <th
+                scope="row"
+                className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+              ></th>
+              <td className="px-6 py-4"></td>
+              <td className="px-6 py-4"></td>
+              <td className="px-6 py-4 text-gray-900 font-medium">Total</td>
+              <td className="px-6 py-4">{totalKasMasuk}</td>
+            </tr>
           </tbody>
         </table>
       </div>
