@@ -5,6 +5,7 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Member from "./routes/member.jsx";
 import Kehadiran from "./routes/kehadiran.jsx";
+import CatatKas from "./routes/catatKas.jsx";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: "/kehadiran",
     element: <Kehadiran />,
+  },
+  {
+    path: "/catatKas",
+    element: <CatatKas />,
   },
 ]);
 
