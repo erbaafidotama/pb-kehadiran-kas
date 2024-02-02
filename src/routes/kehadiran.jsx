@@ -57,7 +57,7 @@ function Kehadiran() {
     }
     setTotalKasMasuk(totalMasuk);
   }
-  console.log("totalMasuk", totalKasMasuk);
+
   async function getMembers() {
     const { data } = await supabase.from("tbl_member").select();
     setMembers(data);
