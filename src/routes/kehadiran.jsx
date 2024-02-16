@@ -16,7 +16,8 @@ function Kehadiran() {
   const [suksesSimpan, setSuksesSimpan] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [showModalSubmit, setShowModalSubmit] = useState(false);
-  const [totalKasMasuk, setTotalKasMasuk] = useState(0);
+  const [totalBayar, setTotalBayar] = useState(0);
+  const [totalKalkulasi, setTotalKalkulasi] = useState(0);
   const [dataGetOne, setDataGetOne] = useState({});
   const { register, handleSubmit, reset, getValues, setValue } = useForm();
 
@@ -34,7 +35,7 @@ function Kehadiran() {
     ) {
       const totalBayar =
         Number(dataForm.jumlah_kok) * 3000 + Number(dataForm.patungan_lapangan);
-      setValue("total_bayar", totalBayar);
+      setValue("hasil_kalkulasi", totalBayar);
     }
   }
 
@@ -56,9 +57,9 @@ function Kehadiran() {
     for (let index = 0; index < data.length; index++) {
       totalMasuk = totalMasuk + data[index].total_bayar;
     }
-    setTotalKasMasuk(totalMasuk);
+    setTotalBayar(totalMasuk);
   }
-  console.log("totalKasMasuk", totalKasMasuk);
+  console.log("totalBayar", totalBayar);
   async function getMembers() {
     const { data } = await supabase.from("tbl_member").select();
     setMembers(data);
@@ -75,7 +76,8 @@ function Kehadiran() {
         .update({
           jumlah_kok: dataForm.jumlah_kok,
           patungan_lapangan: dataForm.patungan_lapangan,
-          total_bayar: dataForm.total_bayar,
+          total_bayar: dataForm.total_bayar || 0,
+          hasil_kalkulasi: dataForm.hasil_kalkulasi,
         })
         .eq("kehadiran_uuid", dataGetOne.kehadiran_uuid)
         .select();
@@ -87,6 +89,7 @@ function Kehadiran() {
           jumlah_kok: "",
           patungan_lapangan: "",
           total_bayar: "",
+          hasil_kalkulasi: "",
         });
         setSuksesSimpan(true);
         setDataGetOne({});
@@ -99,7 +102,8 @@ function Kehadiran() {
           member_id: dataForm.member_id,
           jumlah_kok: dataForm.jumlah_kok,
           patungan_lapangan: dataForm.patungan_lapangan,
-          total_bayar: dataForm.total_bayar,
+          total_bayar: dataForm.total_bayar || 0,
+          hasil_kalkulasi: dataForm.hasil_kalkulasi,
           tanggal_main: getToday,
         },
       ]);
@@ -112,6 +116,7 @@ function Kehadiran() {
           jumlah_kok: "",
           patungan_lapangan: "",
           total_bayar: "",
+          hasil_kalkulasi: "",
         });
         setSuksesSimpan(true);
         setDataGetOne({});
@@ -131,7 +136,13 @@ function Kehadiran() {
     for (let index = 0; index < data.length; index++) {
       totalMasuk = totalMasuk + data[index].total_bayar;
     }
-    setTotalKasMasuk(totalMasuk);
+    setTotalBayar(totalMasuk);
+
+    let hasilKalkulasi = 0;
+    for (let index = 0; index < data.length; index++) {
+      hasilKalkulasi = hasilKalkulasi + data[index].hasil_kalkulasi;
+    }
+    setTotalKalkulasi(hasilKalkulasi);
   }
 
   async function handleGetOneKehadiran(dataRow) {
@@ -146,6 +157,8 @@ function Kehadiran() {
       setValue("member_id", data[0].member.id);
       setValue("jumlah_kok", data[0].jumlah_kok);
       setValue("patungan_lapangan", data[0].patungan_lapangan);
+      setValue("hasil_kalkulasi", data[0].hasil_kalkulasi);
+      setValue("total_bayar", data[0].total_bayar);
     }
   }
 
@@ -167,6 +180,7 @@ function Kehadiran() {
         jumlah_kok: "",
         patungan_lapangan: "",
         total_bayar: "",
+        hasil_kalkulasi: "",
       });
       setShowModalDelete(false);
       setDataGetOne({});
@@ -181,7 +195,7 @@ function Kehadiran() {
         catat_kas_uuid: uuid,
         tipe_kas_id: 1,
         jenis_kas_id: 1,
-        nominal: totalKasMasuk,
+        nominal: totalBayar,
         tanggal_transaksi: getToday,
       },
     ]);
@@ -249,7 +263,10 @@ function Kehadiran() {
                 Patungan
               </th>
               <th scope="col" className="px-6 py-3">
-                Total Bayar
+                Kalkulasi
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Pembayaran
               </th>
             </tr>
           </thead>
@@ -273,9 +290,15 @@ function Kehadiran() {
                       {Number(kehadiran.jumlah_kok) * 3000}
                     </td>
                     <td className="px-6 py-4">{kehadiran.patungan_lapangan}</td>
-                    <td className="px-6 py-4">
-                      {kehadiran.patungan_lapangan +
-                        Number(kehadiran.jumlah_kok) * 3000}
+                    <td className="px-6 py-4">{kehadiran.hasil_kalkulasi}</td>
+                    <td
+                      className={
+                        kehadiran.total_bayar < kehadiran.hasil_kalkulasi
+                          ? "px-6 py-4 text-red-500"
+                          : "px-6 py-4 text-green-500"
+                      }
+                    >
+                      {kehadiran.total_bayar}
                     </td>
                   </tr>
                 );
@@ -288,7 +311,16 @@ function Kehadiran() {
               <td className="px-6 py-4"></td>
               <td className="px-6 py-4"></td>
               <td className="px-6 py-4 text-gray-900 font-medium">Total</td>
-              <td className="px-6 py-4">{totalKasMasuk}</td>
+              <td className="px-6 py-4">{totalKalkulasi}</td>
+              <td
+                className={
+                  totalBayar < totalKalkulasi
+                    ? "px-6 py-4 text-red-500"
+                    : "px-6 py-4 text-green-500"
+                }
+              >
+                {totalBayar}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -297,11 +329,11 @@ function Kehadiran() {
         onClick={() => setShowModalSubmit(true)}
         type="button"
         className={
-          Number(totalKasMasuk) <= 0
+          Number(totalBayar) <= 0
             ? "mt-10 cursor-not-allowed w-full text-white bg-green-500  focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             : "mt-10 w-full text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
         }
-        disabled={Number(totalKasMasuk) <= 0}
+        disabled={Number(totalBayar) <= 0}
       >
         Submit
       </button>
@@ -422,26 +454,42 @@ function Kehadiran() {
                     <button
                       onClick={handleSubmit(handleKalkulasi)}
                       type="button"
-                      className="mt-3 mb-10 py-2.5 px-5 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-gray-200 rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                      className="mt-3  py-2.5 px-5 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-gray-200 rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                     >
                       Kalkulasi
                     </button>
+                    <div>
+                      <label
+                        htmlFor="hasil_kalkulasi"
+                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >
+                        Hasil Kalkulasi
+                      </label>
+                      <input
+                        name="kalkulasi"
+                        id="hasil_kalkulasi"
+                        placeholder="hasil_kalkulasi"
+                        className="bg-gray-50 border mb-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                        required
+                        {...register("hasil_kalkulasi")}
+                        disabled
+                      />
+                    </div>
 
                     <div>
                       <label
                         htmlFor="total_bayar"
                         className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                       >
-                        Total Bayar
+                        Pembayaran
                       </label>
                       <input
                         name="total_bayar"
                         id="jumlatotal_bayarh_kok"
-                        placeholder="Total Bayar"
+                        placeholder="Pembayaran"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                         required
                         {...register("total_bayar")}
-                        disabled
                       />
                     </div>
                   </div>
@@ -580,7 +628,7 @@ function Kehadiran() {
                 </svg>
                 <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
                   Are you sure you want to Submit to Catat Kas for This Data?
-                  Nominal {totalKasMasuk}
+                  Nominal {totalBayar}
                 </h3>
                 <button
                   onClick={handleSubmit(handleSubmitToCataKas)}
